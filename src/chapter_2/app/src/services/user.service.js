@@ -16,6 +16,14 @@ class UserService {
         return axios.get(API_URL + "cart/", { headers: authHeader() })
     }
 
+    getMyOrders() {
+        return axios.get(API_URL + "my-orders/", { headers: authHeader() })
+    }
+
+    createOrder(items) {
+        return axios.post(API_URL + "my-orders/", {items}, { headers: authHeader() })
+    }
+
     addCart(itemId) {
         return axios.post(API_URL + "cart/", { itemId }, { headers: authHeader() })
     }

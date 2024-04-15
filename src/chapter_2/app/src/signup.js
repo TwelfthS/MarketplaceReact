@@ -5,7 +5,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { signup } from "./actions/auth"
 
 function SignUp() {
-    const { register, handleSubmit, watch, formState: { errors } } = useForm();
+    const { register, handleSubmit, watch, formState: { errors } } = useForm()
     const navigate = useNavigate()
 
     const isLoggedIn = useSelector(state => state.auth.isLoggedIn)
@@ -14,19 +14,15 @@ function SignUp() {
     const dispatch = useDispatch()
 
     const onSubmit = (data) => {
-        console.log("here")
         if (data.password === data.repeatPassword) {
             dispatch(signup(data.name, data.password))
                 .then(() => {
-                    console.log("cool")
                     navigate("/")
                 })
                 .catch((err) => {
-                    console.log("what")
                     console.log(err)
                 })
         } else {
-            console.log("wew")
             dispatch({type: 'SET_MESSAGE', payload: "Пароли не совпадают!"})
         }
     }

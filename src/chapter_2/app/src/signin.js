@@ -1,12 +1,14 @@
 import React, { useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { Navigate, useNavigate  } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate  } from 'react-router-dom'
 import { useForm } from "react-hook-form"
 
 import { login } from "./actions/auth"
+import userService from "./services/user.service"
 
 function SignIn() {
   const navigate = useNavigate()
+  const location = useLocation()
 
   const { register, handleSubmit, formState: { errors } } = useForm()
   
@@ -21,7 +23,16 @@ function SignIn() {
     setLoading(true)
     dispatch(login(data.name, data.password))
       .then(() => {
-        navigate("/")
+        if (location.state) {
+          userService.addCart(location.state).then(() => {
+            navigate('/cart')
+          }).catch((err) => {
+              console.log(err)
+              navigate('/')
+          })
+        } else {
+          navigate("/")
+        }
       })
       .catch((err) => {
         console.log(err)
@@ -30,7 +41,7 @@ function SignIn() {
   }
 
   if (isLoggedIn) {
-    return <Navigate to="/vacancies" />
+    return <Navigate to="/" />
   }
 
   return (
@@ -44,6 +55,7 @@ function SignIn() {
               className="form-control"
               {...register("name", {required: true})}
             />
+            {errors.name && <p>Error!</p>}
           </div>
 
           <div className="form-group mb-3">
@@ -53,6 +65,7 @@ function SignIn() {
               className="form-control"
               {...register("password", {required: true})}
             />
+            {errors.password && <p>Error!</p>}
           </div>
 
           <div className="form-group mb-3">

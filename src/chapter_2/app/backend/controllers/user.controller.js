@@ -3,10 +3,11 @@ const models = require("../models/index.js")
 const User = models.User
 const Item = models.Item
 const Cart = models.Cart
+const Order = models.Order
 
 exports.getProducts = (req, res) => {
     Item.findAll({raw: true}).then((items) => {
-        res.json(items)
+        res.status(200).send(items)
     })
 }
 
@@ -23,19 +24,13 @@ exports.getProduct = (req, res) => {
 }
 
 exports.getCart = (req, res) => {
-    console.log(req.userId)
     User.findOne({
         where: {
             id: req.userId
         }
     }).then((user) => {
-        console.log("hello")
         user.getAddedItem().then((items) => {
-            console.log("in")
             res.status(200).send(items)
-            // getQuantity(user.id, items).then(() => {
-            //     res.status(200).send(items)
-            // })
         })
         .catch((err) => {
             res.status(404).send({message: err})
@@ -45,17 +40,67 @@ exports.getCart = (req, res) => {
     })
 }
 
-const getQuantity = async (userId, items) => {
-    for (let i in items) {
-        const record = await Cart.findOne({
-            where: {
-                userId: userId,
-                itemId: items[i].id
-            }
+// const getQuantity = async (userId, items) => {
+//     for (let i in items) {
+//         const record = await Cart.findOne({
+//             where: {
+//                 userId: userId,
+//                 itemId: items[i].id
+//             }
+//         })
+//         items[i].quantiy = record.quantity
+//     }
+//     console.log(items)
+// }
+
+exports.getMyOrders = async (req, res) => {
+    Order.findAll({
+        where: {
+            userId: req.userId
+        },
+        include: {
+            model: Item,
+            as: "orderedItem"
+        }
+    }).then((orders) => {
+        res.status(200).send(orders)
+    }).catch((err) => {
+        res.status(404).send({message: err})
+    })
+}
+
+exports.createOrder = async (req, res) => {
+    console.log(req.body.items)
+    const cost = req.body.items.reduce((sum, item) => sum + item.price * item.Cart.quantity, 0)
+    const items = req.body.items.map(item => item.id)
+    console.log(cost)
+    Order.create({
+        userId: req.userId,
+        orderedItems: items,
+        cost: cost
+    }).then((order) => {
+        console.log("HEREEE")
+        order.update({
+            date: parseDate(order.createdAt)
+        }).then(() => {
+            order.addOrderedItem(items).then(() => {
+                Cart.destroy({
+                    where: {
+                        userId: req.userId
+                    }
+                }).then(() => {
+                    res.status(200).send(order)
+                })
+            })
         })
-        items[i].quantiy = record.quantity
-    }
-    console.log(items)
+    }).catch((err) => {
+        res.status(500).send({message: err})
+    })
+}
+
+function parseDate(date) {
+    const formattedDate = new Date(date).toLocaleString('ru', { dateStyle: 'short', timeStyle: 'short' })
+    return formattedDate
 }
 
 exports.addCart = (req, res) => {
@@ -89,11 +134,17 @@ exports.addItem = (req, res) => {
             itemId: req.body.itemId
         }
     }).then((record) => {
-        record.update({
-            quantity: record.quantity + req.body.change
-        }).then(() => {
-            res.status(200).send()
-        })
+        if (req.body.change === "removeAll") {
+            record.destroy().then(() => {
+                res.status(200).send()
+            })
+        } else {
+            record.update({
+                quantity: record.quantity + req.body.change
+            }).then(() => {
+                res.status(200).send()
+            })
+        }
     })
     // Item.findOne({
     //     where: {

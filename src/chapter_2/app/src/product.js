@@ -2,14 +2,22 @@ import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import userService from "./services/user.service"
 
+import { MarginedDiv } from "./styled"
+
 function Product() {
     const params = useParams()
     const itemId = params.itemId
     const [data, setData] = useState({})
+    const [date, setDate] = useState('')
     useEffect(() => {
         userService.GetProduct(itemId)
             .then((response) => {
-                setData(response.data)
+                if (response.data) {
+                    setData(response.data)
+                    if (response.data.createdAt) {
+                        setDate(new Date(response.data.createdAt).toLocaleString('ru', { dateStyle: 'short', timeStyle: 'short' }))
+                    }
+                }
             })
             .catch((err) => {
                 console.log(err)
@@ -19,10 +27,12 @@ function Product() {
         return <p>Item not found</p>
     }
     return (
-        <div>
+        <MarginedDiv>
             <p>{data.name}</p>
             <p>{data.description}</p>
-        </div>
+            <p>{data.price}</p>
+            <p>Posted: {date}</p>
+        </MarginedDiv>
     )
 }
 

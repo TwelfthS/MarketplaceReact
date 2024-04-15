@@ -15,6 +15,7 @@ const sequelize =
     config.username,
     config.password, {
         host: 'localhost',
+        timezone: '+03:00',
         dialect: 'mysql'
     })
 
@@ -32,7 +33,7 @@ const app = express()
 
 app.use(cors())
 app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+// app.use(express.urlencoded({ extended: true }))
 
 app.use(function(req, res, next) {
   res.header(
@@ -59,3 +60,7 @@ app.get('/cart', authJwt.verifyToken, userController.getCart)
 app.post('/cart', authJwt.verifyToken, userController.addCart)
 
 app.put('/cart', authJwt.verifyToken, userController.addItem)
+
+app.get('/my-orders', authJwt.verifyToken, userController.getMyOrders)
+
+app.post('/my-orders', authJwt.verifyToken, userController.createOrder)
