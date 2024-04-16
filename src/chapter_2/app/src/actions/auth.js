@@ -1,4 +1,5 @@
 import AuthService from "../services/auth.service"
+import userService from "../services/user.service"
 
 export const signup = (username, password) => async (dispatch) => {
     try {
@@ -7,11 +8,7 @@ export const signup = (username, password) => async (dispatch) => {
             type: 'REGISTER_SUCCESS',
             payload: { user: data }
         })
-
-        dispatch({
-            type: 'SET_MESSAGE',
-            payload: data.message,
-        })
+        
         return Promise.resolve()
     } catch (error) {
         const message = (error.response &&
@@ -38,6 +35,12 @@ export const login = (username, password) => async (dispatch) => {
         dispatch({
             type: 'LOGIN_SUCCESS',
             payload: { user: data },
+        })
+        const cartResponse = await userService.getCart()
+        const cart = cartResponse.data
+        dispatch({
+            type: 'UPDATE_CART',
+            payload: cart
         })
         return Promise.resolve()
     } catch (error) {

@@ -40,19 +40,6 @@ exports.getCart = (req, res) => {
     })
 }
 
-// const getQuantity = async (userId, items) => {
-//     for (let i in items) {
-//         const record = await Cart.findOne({
-//             where: {
-//                 userId: userId,
-//                 itemId: items[i].id
-//             }
-//         })
-//         items[i].quantiy = record.quantity
-//     }
-//     console.log(items)
-// }
-
 exports.getMyOrders = async (req, res) => {
     Order.findAll({
         where: {
@@ -70,20 +57,21 @@ exports.getMyOrders = async (req, res) => {
 }
 
 exports.createOrder = async (req, res) => {
-    console.log(req.body.items)
     const cost = req.body.items.reduce((sum, item) => sum + item.price * item.Cart.quantity, 0)
-    const items = req.body.items.map(item => item.id)
-    console.log(cost)
     Order.create({
         userId: req.userId,
-        orderedItems: items,
+        // orderedItems: items,
         cost: cost
     }).then((order) => {
-        console.log("HEREEE")
         order.update({
             date: parseDate(order.createdAt)
         }).then(() => {
-            order.addOrderedItem(items).then(() => {
+            const promises = req.body.items.map(item => {
+                console.log(item.Cart.quantity)
+                return order.addOrderedItem(item.id, { through: { quantity: item.Cart.quantity } })
+            })
+            Promise.all(promises).then(() => {
+            // order.addOrderedItem(items, {through: {quantity: quantities}}).then(() => {
                 Cart.destroy({
                     where: {
                         userId: req.userId
@@ -146,17 +134,4 @@ exports.addItem = (req, res) => {
             })
         }
     })
-    // Item.findOne({
-    //     where: {
-    //         id: req.body.itemId
-    //     }
-    // }).then((item) => {
-    //     User.findOne({
-    //         where: {
-    //             id: req.userId
-    //         }
-    //     }).then((user) => {
-    //         user.addAddedItem(item, {through: })
-    //     })
-    // })
 }

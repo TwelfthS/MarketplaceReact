@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 
 import { login } from "./actions/auth"
 import userService from "./services/user.service"
+import { setError } from "./actions/errors"
 
 function SignIn() {
   const navigate = useNavigate()
@@ -35,7 +36,7 @@ function SignIn() {
         }
       })
       .catch((err) => {
-        console.log(err)
+        dispatch(setError(err))
         setLoading(false)
       })
   }

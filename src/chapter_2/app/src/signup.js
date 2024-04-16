@@ -5,7 +5,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { signup } from "./actions/auth"
 
 function SignUp() {
-    const { register, handleSubmit, watch, formState: { errors } } = useForm()
+    const { register, handleSubmit, formState: { errors } } = useForm()
     const navigate = useNavigate()
 
     const isLoggedIn = useSelector(state => state.auth.isLoggedIn)

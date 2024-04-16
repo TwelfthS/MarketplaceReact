@@ -1,62 +1,36 @@
-import { useEffect, useState } from "react"
 import userService from "./services/user.service"
-import { Link, Navigate, useNavigate } from "react-router-dom"
-import { useSelector } from "react-redux"
-import { CartButton, LinkCard, ProductCard, RemoveAllButton } from "./styled"
+import { Navigate, useNavigate } from "react-router-dom"
+import { useDispatch, useSelector } from "react-redux"
+import { CardImg, CardsDiv, ImgDiv, LinkCard, ProductCard, RemoveAllButton, StyledButton } from "./styled"
 import CartAdder from "./cart-adder"
+import { updateCart } from "./actions/user"
+import { setError } from "./actions/errors"
 
 
-function Cart() { // total price!
-    const [data, setData] = useState([])
+function Cart() {
     const isLoggedIn = useSelector((state) => state.auth.isLoggedIn)
+    const message = useSelector((state) => state.message.message)
 
     const navigate = useNavigate()
 
-    const updateCart = () => {
-        userService.getCart().then((response) => {
-            setData(response.data)
-        }).catch((err) => {
-            console.log(err)
-        })
-    }
+    const dispatch = useDispatch()
 
-    
-    useEffect(() => {
-        updateCart()
-    }, [])
-
-    const add = (itemId, change) => {
-        userService.addItem(itemId, change).then((response) => {
-            updateCart()
-        }).catch((err) => {
-            console.log(err)
-        })
-    }
-
-    const remove = (itemId, change, currentQuantity) => {
-        if (currentQuantity > 1) {
-            userService.addItem(itemId, change).then((response) => {
-                updateCart()
-            }).catch((err) => {
-                console.log(err)
-            })
-        }
-    }
+    const data = useSelector(state => state.user.data)
 
     const removeAll = (itemId) => {
-        userService.addItem(itemId, 'removeAll').then((response) => {
-            updateCart()
+        userService.addItem(itemId, 'removeAll').then(() => {
+            dispatch(updateCart())
         }).catch((err) => {
-            console.log(err)
+            dispatch(setError(err))
         })
     }
 
     const createOrder = () => {
-        updateCart()
-        userService.createOrder(data).then((response) => {
+        userService.createOrder(data).then(() => {
+            dispatch(updateCart())
             navigate('/my-orders')
         }).catch((err) => {
-            console.log(err)
+            dispatch(setError(err))
         })
     }
 
@@ -64,31 +38,45 @@ function Cart() { // total price!
         return <Navigate to='/' />
     }
 
-    if (data.length === 0) {
+    if (!data || data.length === 0) {
         return <div className="m-5">
-            <p>Cart is empty</p>
-            <button onClick={() => navigate('/')}>Go shopping</button>
+            <p>Корзина пуста</p>
+            <StyledButton onClick={() => navigate('/')}>За покупками</StyledButton>
         </div>
     }
 
     return (
-        <div className="d-flex justify-content-start flex-wrap m-5">
-            {data.map((item) => {
-                return <ProductCard key={item.id}>
-                    <div className="card-body">
-                        <LinkCard to={"/products/" + item.id}>{item.name}</LinkCard>
-                        <p className="card-text">{item.description}</p>
-                        {/* <p>Quantity: {item.Cart.quantity}</p>
-                        <CartButton onClick={() => remove(item.id, -1, item.Cart.quantity)}>-</CartButton>
-                        <CartButton onClick={() => add(item.id, 1)}>+</CartButton> */}
-                        <CartAdder item={item}/>
-                        <RemoveAllButton onClick={() => removeAll(item.id)}>X</RemoveAllButton>
+        <div className="d-flex justify-content-between flex-row">
+            <CardsDiv>
+                {data.map((item) => {
+                    return <ProductCard key={item.id}>
+                        <ImgDiv>
+                            <CardImg src={item.image}></CardImg>
+                        </ImgDiv>
+                        <div className="card-body">
+                            <LinkCard to={"/products/" + item.id}>{item.name}</LinkCard>
+                            <p className="card-text">{item.description}</p>
+                            <p className="card-text">{item.price} руб</p>
+                            <CartAdder item={item} cart={true}/>
+                            <RemoveAllButton onClick={() => removeAll(item.id)}>X</RemoveAllButton>
+                        </div>
+                    </ProductCard>
+                })}
+                
+                
+            </CardsDiv>
+            <div style={{margin: '50px 10%', fontSize: '30px'}}>
+                <p>Всего товаров: {data.reduce((sum, item) => sum + item.Cart.quantity, 0)}</p>
+                <p>Итоговая цена: {data.reduce((sum, item) => sum + item.price * item.Cart.quantity, 0)}</p>
+                {data.length > 0 && <StyledButton onClick={createOrder}>Купить</StyledButton>}
+            </div>
+            {message && (
+                <div className="form-group">
+                    <div className="alert alert-danger" role="alert">
+                    {message}
                     </div>
-                </ProductCard>
-            })}
-            <p>Product count: {data.reduce((sum, item) => sum + item.Cart.quantity, 0)}</p>
-            <p>Total price: {data.reduce((sum, item) => sum + item.price * item.Cart.quantity, 0)}</p>
-            {data.length > 0 && <button onClick={createOrder}>Buy</button>}
+                </div>
+            )}
         </div>
     )
 }
