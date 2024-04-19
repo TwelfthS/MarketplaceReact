@@ -50,7 +50,6 @@ function MyOrders() {
             <p>Ещё нет заказов</p>
         </MarginedDiv>
     }
-    console.log(data)
     return (
         <div>
             <div style={{height: '100px'}}>

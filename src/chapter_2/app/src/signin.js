@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form"
 import { login } from "./actions/auth"
 import userService from "./services/user.service"
 import { setError } from "./actions/errors"
+import { updateCart } from "./actions/user"
 
 function SignIn() {
   const navigate = useNavigate()
@@ -25,10 +26,12 @@ function SignIn() {
     dispatch(login(data.name, data.password))
       .then(() => {
         if (location.state) {
+          console.log(location.state)
           userService.addCart(location.state).then(() => {
+            dispatch(updateCart())
             navigate('/cart')
           }).catch((err) => {
-              console.log(err)
+              dispatch(setError(err))
               navigate('/')
           })
         } else {
