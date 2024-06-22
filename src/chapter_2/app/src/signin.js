@@ -26,7 +26,6 @@ function SignIn() {
     dispatch(login(data.name, data.password))
       .then(() => {
         if (location.state) {
-          console.log(location.state)
           userService.addCart(location.state).then(() => {
             dispatch(updateCart())
             navigate('/cart')
@@ -39,7 +38,6 @@ function SignIn() {
         }
       })
       .catch((err) => {
-        dispatch(setError(err))
         setLoading(false)
       })
   }
